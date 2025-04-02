@@ -27,8 +27,10 @@ type ShardedConcurrentMap[K comparable, V any] struct {
 	size      uint32
 }
 
-func NewShardedConcurrentMap[K comparable, V any](shardFunc ShardFunc[K], opts ...ShardedConcurrentMapOptions[K, V]) *ShardedConcurrentMap[K, V] {
-	result := &ShardedConcurrentMap[K, V]{}
+func newShardedConcurrentMap[K comparable, V any](shardFunc ShardFunc[K], opts ...ShardedConcurrentMapOptions[K, V]) *ShardedConcurrentMap[K, V] {
+	result := &ShardedConcurrentMap[K, V]{
+		shardFunc: shardFunc,
+	}
 
 	for _, option := range opts {
 		option(result)
@@ -42,6 +44,10 @@ func NewShardedConcurrentMap[K comparable, V any](shardFunc ShardFunc[K], opts .
 	return result
 }
 
+func NewShardedConcurrentMap[K comparable, V any](shardFunc ShardFunc[K], opts ...ShardedConcurrentMapOptions[K, V]) IConcurrentMap[K, V] {
+	return newShardedConcurrentMap(shardFunc, opts...)
+}
+
 func (m *ShardedConcurrentMap[K, V]) Get(key K) V {
 	shard := m.shards[m.shardFunc(key)%m.size]
 	return shard.Get(key)
@@ -50,4 +56,9 @@ func (m *ShardedConcurrentMap[K, V]) Get(key K) V {
 func (m *ShardedConcurrentMap[K, V]) Set(key K, value V) {
 	shard := m.shards[m.shardFunc(key)%m.size]
 	shard.Set(key, value)
+}
+
+func (m *ShardedConcurrentMap[K, V]) Delete(key K) {
+	shard := m.shards[m.shardFunc(key)%m.size]
+	shard.Delete(key)
 }

@@ -9,10 +9,14 @@ type ConcurrentMap[K comparable, V any] struct {
 	mutex sync.RWMutex
 }
 
-func NewConcurrentMap[K comparable, V any]() *ConcurrentMap[K, V] {
+func newConcurrentMap[K comparable, V any]() *ConcurrentMap[K, V] {
 	return &ConcurrentMap[K, V]{
 		data: make(map[K]V),
 	}
+}
+
+func NewConcurrentMap[K comparable, V any]() IConcurrentMap[K, V] {
+	return newConcurrentMap[K, V]()
 }
 
 func (m *ConcurrentMap[K, V]) Get(key K) V {

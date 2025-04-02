@@ -9,7 +9,7 @@ import (
 )
 
 func TestConcurrentMapGet(t *testing.T) {
-	data := NewConcurrentMap[string, string]()
+	data := newConcurrentMap[string, string]()
 
 	data.data["key"] = "value"
 
@@ -17,7 +17,7 @@ func TestConcurrentMapGet(t *testing.T) {
 }
 
 func TestConcurrentMapSet(t *testing.T) {
-	data := NewConcurrentMap[string, string]()
+	data := newConcurrentMap[string, string]()
 
 	data.Set("key", "value")
 
@@ -25,7 +25,7 @@ func TestConcurrentMapSet(t *testing.T) {
 }
 
 func TestConcurrentMapDelete(t *testing.T) {
-	data := NewConcurrentMap[string, string]()
+	data := newConcurrentMap[string, string]()
 
 	data.Set("key", "value")
 	data.Delete("key")
@@ -34,7 +34,7 @@ func TestConcurrentMapDelete(t *testing.T) {
 }
 
 func TestConcurrentMapConcurrentSetGetDelete(t *testing.T) {
-	data := NewConcurrentMap[string, int]()
+	data := newConcurrentMap[string, int]()
 
 	var wg sync.WaitGroup
 	goRoutines := 10
