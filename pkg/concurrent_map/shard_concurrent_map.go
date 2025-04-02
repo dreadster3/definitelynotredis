@@ -21,6 +21,10 @@ func DefaultStringShardFunc(key string) uint32 {
 	return hash
 }
 
+func DefaultIntShardFunc(key int) uint32 {
+	return uint32(key)
+}
+
 type ShardedConcurrentMap[K comparable, V any] struct {
 	shards    []*ConcurrentMap[K, V]
 	shardFunc ShardFunc[K]
@@ -41,6 +45,10 @@ func newShardedConcurrentMap[K comparable, V any](shardFunc ShardFunc[K], opts .
 		result.size = 16
 	}
 
+	for idx := range result.shards {
+		result.shards[idx] = newConcurrentMap[K, V]()
+	}
+
 	return result
 }
 
@@ -48,7 +56,7 @@ func NewShardedConcurrentMap[K comparable, V any](shardFunc ShardFunc[K], opts .
 	return newShardedConcurrentMap(shardFunc, opts...)
 }
 
-func (m *ShardedConcurrentMap[K, V]) Get(key K) V {
+func (m *ShardedConcurrentMap[K, V]) Get(key K) (V, bool) {
 	shard := m.shards[m.shardFunc(key)%m.size]
 	return shard.Get(key)
 }

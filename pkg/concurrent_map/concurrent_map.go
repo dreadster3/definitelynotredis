@@ -19,11 +19,11 @@ func NewConcurrentMap[K comparable, V any]() IConcurrentMap[K, V] {
 	return newConcurrentMap[K, V]()
 }
 
-func (m *ConcurrentMap[K, V]) Get(key K) V {
+func (m *ConcurrentMap[K, V]) Get(key K) (V, bool) {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
-
-	return m.data[key]
+	value, exists := m.data[key]
+	return value, exists
 }
 
 func (m *ConcurrentMap[K, V]) Set(key K, value V) {
