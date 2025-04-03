@@ -2,26 +2,14 @@ package concurrentmap
 
 import (
 	"math/rand/v2"
-	"strings"
 	"testing"
 )
-
-const charset = "abcdefghijklmnopqrstuvwxyz"
-
-func randomString(n int) string {
-	sb := strings.Builder{}
-	sb.Grow(n)
-	for range n {
-		sb.WriteByte(charset[rand.IntN(len(charset))])
-	}
-	return sb.String()
-}
 
 func RandomShardFunc(key string) uint32 {
 	return rand.Uint32()
 }
 
-func BenchmarkShardConcurrentMapSetGetDelete(b *testing.B) {
+func BenchmarkParallelShardSameDelete(b *testing.B) {
 	concurrentMap := newShardedConcurrentMap[string, int](DefaultStringShardFunc)
 
 	b.RunParallel(func(pb *testing.PB) {
@@ -29,13 +17,35 @@ func BenchmarkShardConcurrentMapSetGetDelete(b *testing.B) {
 			key := "key"
 			value := 1
 			concurrentMap.Set(key, value)
-			concurrentMap.Get(key)
 			concurrentMap.Delete(key)
 		}
 	})
 }
 
-func BenchmarkShardConcurrentMapDifferentKeySet(b *testing.B) {
+func BenchmarkParallelShardRandomDelete(b *testing.B) {
+	concurrentMap := newShardedConcurrentMap[string, int](RandomShardFunc)
+
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			key := "key"
+			value := 1
+			concurrentMap.Set(key, value)
+			concurrentMap.Delete(key)
+		}
+	})
+}
+
+func BenchmarkParallelShardSameSet(b *testing.B) {
+	concurrentMap := newShardedConcurrentMap[string, int](DefaultStringShardFunc)
+
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			concurrentMap.Set("key", 1)
+		}
+	})
+}
+
+func BenchmarkParallelShardRandomSet(b *testing.B) {
 	concurrentMap := newShardedConcurrentMap[string, int](RandomShardFunc)
 
 	b.RunParallel(func(pb *testing.PB) {
@@ -45,7 +55,17 @@ func BenchmarkShardConcurrentMapDifferentKeySet(b *testing.B) {
 	})
 }
 
-func BenchmarkShardConcurrentMapDifferentKeyGet(b *testing.B) {
+func BenchmarkParallelShardSameGet(b *testing.B) {
+	concurrentMap := newShardedConcurrentMap[string, int](DefaultStringShardFunc)
+
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			concurrentMap.Get("key")
+		}
+	})
+}
+
+func BenchmarkParallelShardRandomGet(b *testing.B) {
 	concurrentMap := newShardedConcurrentMap[string, int](RandomShardFunc)
 
 	b.RunParallel(func(pb *testing.PB) {
@@ -53,4 +73,38 @@ func BenchmarkShardConcurrentMapDifferentKeyGet(b *testing.B) {
 			concurrentMap.Get("key")
 		}
 	})
+}
+
+func BenchmarkSyncShardSet(b *testing.B) {
+	concurrentMap := newShardedConcurrentMap[string, int](DefaultStringShardFunc)
+
+	for b.Loop() {
+		concurrentMap.Set("key", 1)
+	}
+}
+
+func BenchmarkSyncShardRandomSet(b *testing.B) {
+	concurrentMap := newShardedConcurrentMap[string, int](RandomShardFunc)
+
+	for b.Loop() {
+		concurrentMap.Set("key", 1)
+	}
+}
+
+func BenchmarkSyncShardGet(b *testing.B) {
+	concurrentMap := newShardedConcurrentMap[string, int](DefaultStringShardFunc)
+	concurrentMap.Set("key", 1)
+
+	for b.Loop() {
+		concurrentMap.Get("key")
+	}
+}
+
+func BenchmarkSyncShardRandomGet(b *testing.B) {
+	concurrentMap := newShardedConcurrentMap[string, int](RandomShardFunc)
+	concurrentMap.Set("key", 1)
+
+	for b.Loop() {
+		concurrentMap.Get("key")
+	}
 }

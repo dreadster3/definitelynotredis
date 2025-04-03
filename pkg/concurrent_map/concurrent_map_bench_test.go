@@ -2,7 +2,7 @@ package concurrentmap
 
 import "testing"
 
-func BenchmarkConcurrentMapSetGetDelete(b *testing.B) {
+func BenchmarkParallelDelete(b *testing.B) {
 	concurrentMap := newConcurrentMap[string, int]()
 
 	b.RunParallel(func(pb *testing.PB) {
@@ -10,13 +10,12 @@ func BenchmarkConcurrentMapSetGetDelete(b *testing.B) {
 			key := "key"
 			value := 1
 			concurrentMap.Set(key, value)
-			concurrentMap.Get(key)
 			concurrentMap.Delete(key)
 		}
 	})
 }
 
-func BenchmarkConcurrentMapDifferentKeySet(b *testing.B) {
+func BenchmarkParallelSet(b *testing.B) {
 	concurrentMap := newConcurrentMap[string, int]()
 
 	b.RunParallel(func(pb *testing.PB) {
@@ -26,7 +25,7 @@ func BenchmarkConcurrentMapDifferentKeySet(b *testing.B) {
 	})
 }
 
-func BenchmarkConcurrentMapDifferentKeyGet(b *testing.B) {
+func BenchmarkParallelGet(b *testing.B) {
 	concurrentMap := newConcurrentMap[string, int]()
 
 	b.RunParallel(func(pb *testing.PB) {
@@ -34,4 +33,21 @@ func BenchmarkConcurrentMapDifferentKeyGet(b *testing.B) {
 			concurrentMap.Get("key")
 		}
 	})
+}
+
+func BenchmarkSyncSet(b *testing.B) {
+	concurrentMap := newConcurrentMap[string, int]()
+
+	for b.Loop() {
+		concurrentMap.Set("key", 1)
+	}
+}
+
+func BenchmarkSyncGet(b *testing.B) {
+	concurrentMap := newConcurrentMap[string, int]()
+	concurrentMap.Set("key", 1)
+
+	for b.Loop() {
+		concurrentMap.Get("key")
+	}
 }
