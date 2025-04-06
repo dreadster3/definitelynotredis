@@ -70,3 +70,17 @@ func (m *ShardedConcurrentMap[K, V]) Delete(key K) {
 	shard := m.shards[m.shardFunc(key)%m.size]
 	shard.Delete(key)
 }
+
+func (m *ShardedConcurrentMap[K, V]) Iter() func(func(K, V) bool) {
+	return m.Next
+}
+
+func (m *ShardedConcurrentMap[K, V]) Next(yield func(K, V) bool) {
+	for _, shard := range m.shards {
+		for key, value := range shard.Next {
+			if !yield(key, value) {
+				return
+			}
+		}
+	}
+}

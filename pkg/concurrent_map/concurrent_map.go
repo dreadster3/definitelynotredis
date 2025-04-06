@@ -1,6 +1,7 @@
 package concurrentmap
 
 import (
+	"maps"
 	"sync"
 )
 
@@ -38,4 +39,29 @@ func (m *ConcurrentMap[K, V]) Delete(key K) {
 	defer m.mutex.Unlock()
 
 	delete(m.data, key)
+}
+
+func (m *ConcurrentMap[K, V]) Len() int {
+	return len(m.data)
+}
+
+func (m *ConcurrentMap[K, V]) Iter() func(func(K, V) bool) {
+	return m.Next
+}
+
+func (m *ConcurrentMap[K, V]) Next(yield func(K, V) bool) {
+	snap := make(map[K]V, len(m.data))
+	m.snapshot(snap)
+	for key, value := range snap {
+		if !yield(key, value) {
+			return
+		}
+	}
+}
+
+func (m *ConcurrentMap[K, V]) snapshot(dst map[K]V) {
+	m.mutex.RLock()
+	defer m.mutex.RUnlock()
+
+	maps.Copy(dst, m.data)
 }

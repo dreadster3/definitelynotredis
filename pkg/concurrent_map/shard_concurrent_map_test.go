@@ -32,7 +32,7 @@ func TestShardedConcurrentMapSet(t *testing.T) {
 	assert.Equal(t, expected, data.shards[data.shardFunc(key)%data.size].data[key])
 }
 
-func TestShardedConcurrentMapDelete(t *testing.T) {
+func TestShardedDelete(t *testing.T) {
 	data := newShardedConcurrentMap[string, string](DefaultStringShardFunc)
 
 	key := "key"
@@ -44,7 +44,7 @@ func TestShardedConcurrentMapDelete(t *testing.T) {
 	assert.NotContains(t, data.shards[data.shardFunc(key)%data.size].data, key)
 }
 
-func TestShardedConcurrentMapConcurrentSetGetDelete(t *testing.T) {
+func TestShardedConcurrentSetGetDelete(t *testing.T) {
 	data := newShardedConcurrentMap[string, int](DefaultStringShardFunc)
 
 	var wg sync.WaitGroup

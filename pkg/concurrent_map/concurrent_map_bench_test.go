@@ -1,6 +1,9 @@
 package concurrentmap
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+)
 
 func BenchmarkParallelDelete(b *testing.B) {
 	concurrentMap := newConcurrentMap[string, int]()
@@ -49,5 +52,20 @@ func BenchmarkSyncGet(b *testing.B) {
 
 	for b.Loop() {
 		concurrentMap.Get("key")
+	}
+}
+
+func BenchmarkSyncIter(b *testing.B) {
+	concurrentMap := newConcurrentMap[string, int]()
+	for i := range 1000000 {
+		concurrentMap.Set(fmt.Sprintf("%d", i), i)
+	}
+
+	b.ResetTimer()
+	for b.Loop() {
+		for key, value := range concurrentMap.Next {
+			_ = key
+			_ = value
+		}
 	}
 }

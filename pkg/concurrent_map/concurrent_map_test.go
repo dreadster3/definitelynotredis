@@ -2,13 +2,14 @@ package concurrentmap
 
 import (
 	"fmt"
+	"maps"
 	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func TestConcurrentMapGet(t *testing.T) {
+func TestGet(t *testing.T) {
 	data := newConcurrentMap[string, string]()
 
 	key := "key"
@@ -21,7 +22,7 @@ func TestConcurrentMapGet(t *testing.T) {
 	assert.Equal(t, expected, actual)
 }
 
-func TestConcurrentMapSet(t *testing.T) {
+func TestSet(t *testing.T) {
 	data := newConcurrentMap[string, string]()
 
 	key := "key"
@@ -32,7 +33,7 @@ func TestConcurrentMapSet(t *testing.T) {
 	assert.Equal(t, expected, data.data[key])
 }
 
-func TestConcurrentMapDelete(t *testing.T) {
+func TestDelete(t *testing.T) {
 	data := newConcurrentMap[string, string]()
 
 	data.Set("key", "value")
@@ -41,7 +42,7 @@ func TestConcurrentMapDelete(t *testing.T) {
 	assert.NotContains(t, data.data, "key")
 }
 
-func TestConcurrentMapConcurrentSetGetDelete(t *testing.T) {
+func TestConcurrentSetGetDelete(t *testing.T) {
 	data := newConcurrentMap[string, int]()
 
 	var wg sync.WaitGroup
@@ -70,4 +71,28 @@ func TestConcurrentMapConcurrentSetGetDelete(t *testing.T) {
 	}
 
 	wg.Wait()
+}
+
+func TestIter(t *testing.T) {
+	data := newConcurrentMap[string, int]()
+	data.Set("1", 1)
+	data.Set("2", 2)
+	data.Set("3", 3)
+	data.Set("4", 4)
+	data.Set("5", 5)
+	data.Set("6", 6)
+	data.Set("7", 7)
+
+	expected := map[string]int{
+		"1": 1,
+		"2": 2,
+		"3": 3,
+		"4": 4,
+		"5": 5,
+		"6": 6,
+		"7": 7,
+	}
+	actual := maps.Collect(data.Next)
+
+	assert.Equal(t, expected, actual)
 }

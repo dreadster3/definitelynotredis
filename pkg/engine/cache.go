@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"log/slog"
 	"time"
 
 	concurrentmap "github.com/dreadster3/definitelynotredis/pkg/concurrent_map"
@@ -11,9 +12,14 @@ type cacheEntry struct {
 	expiresAt time.Time
 }
 
+func (entry cacheEntry) isExpired() bool {
+	return !entry.expiresAt.IsZero() && time.Now().After(entry.expiresAt)
+}
+
 type Cache struct {
-	data concurrentmap.IConcurrentMap[string, cacheEntry]
-	ttl  time.Duration
+	data   concurrentmap.IConcurrentMap[string, cacheEntry]
+	ttl    time.Duration
+	Logger *slog.Logger
 }
 
 func NewCache() *Cache {
@@ -30,7 +36,7 @@ func (c *Cache) Get(key string) (any, bool) {
 		return nil, false
 	}
 
-	if !entry.expiresAt.IsZero() && time.Now().After(entry.expiresAt) {
+	if entry.isExpired() {
 		return nil, false
 	}
 
@@ -49,4 +55,15 @@ func (c *Cache) SetWithTTL(key string, value any, ttl time.Duration) {
 	}
 
 	c.data.Set(key, cacheEntry{value: value, expiresAt: expires})
+}
+
+func isExpiredFilterFunc(_ string, entry cacheEntry) bool {
+	return entry.isExpired()
+}
+
+func (c *Cache) removeExpired() {
+	for key := range concurrentmap.Filter(c.data.NextSnapshot, isExpiredFilterFunc) {
+		c.Logger.Debug("Deleting expired entry", "key", key)
+		c.data.Delete(key)
+	}
 }
