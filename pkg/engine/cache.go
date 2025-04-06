@@ -62,7 +62,7 @@ func isExpiredFilterFunc(_ string, entry cacheEntry) bool {
 }
 
 func (c *Cache) removeExpired() {
-	for key := range concurrentmap.Filter(c.data.NextSnapshot, isExpiredFilterFunc) {
+	for key := range concurrentmap.Filter(c.data.Next, isExpiredFilterFunc) {
 		c.Logger.Debug("Deleting expired entry", "key", key)
 		c.data.Delete(key)
 	}
